@@ -1,1 +1,92 @@
-"Steps to connect with Bitbucket" 
+Steps to connect with Bitbucket
+-------------------------------
+
+Step 1:-Create a Named Credential in Salesforce
+
+- Selected Oauth Scope =  api, web, refresh_token, offline_access
+- Callback = https://oauthdebugger.com/debug
+
+Rest all as-is or change anything
+
+Save and click on Manage.
+
+- Permitted Users = Admin approved users are pre-authorized	
+- Add Admin to the list of profile in related list
+
+Step 2:- Create a private-public key pair
+    • openssl genrsa -des3 -passout pass:<password> -out server.pass.key 2048
+    • openssl rsa -passin pass:<password> -in server.pass.key -out server.key
+    • rm server.pass.key
+    • openssl req -new -key server.key -out server.csr
+    • openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+    • base64 -i server.key #to get jwt code 
+    
+    Last Step : when copy pasting the base64 key ensure (1) you don’t copy the new line (whole thing should be a single line) (2) and include the ---BEGIN--- and ---END---
+    
+Details
+1. openssl genrsa -des3 -passout pass:<password> -out server.pass.key 2048
+openssl genrsa: This is a command that generates an RSA private key.
+-des3: This flag specifies that the private key should be encrypted using the Triple DES algorithm. This helps secure the private key with a passphrase.
+-passout pass:<password>: This flag is used to provide a password to encrypt the key. Here, you are passing the password directly (replace <password> with your actual password). The pass: prefix tells openssl that the password is provided inline.
+-out server.pass.key: This option specifies the name of the file where the encrypted private key will be saved (server.pass.key).
+2048: This is the size (in bits) of the RSA key being generated. A 2048-bit key is considered secure for most purposes.
+
+2. openssl rsa -passin pass:<password> -in server.pass.key -out server.key
+openssl rsa: This is a command that processes RSA keys. In this case, it is used to remove the encryption from the private key.
+-passin pass:<password>: This flag is used to provide the password that was used to encrypt the key. Here, you supply the same password as before (replace <password> with your actual password).
+-in server.pass.key: This specifies the input file, which is the previously generated encrypted key (server.pass.key).
+-out server.key: This option specifies the name of the output file where the unencrypted private key will be saved (server.key).
+
+3. rm server.pass.key
+rm: This is the Linux/Unix command to remove (delete) files or directories.
+server.pass.key: This is the file being removed, which is the previously generated encrypted private key file.
+Essentially, this command deletes the server.pass.key file, which was used to store the password-protected RSA private key.
+
+4. openssl req -new -key server.key -out server.csr
+openssl req: This command generates and processes Certificate Signing Requests (CSR). A CSR is a request for a digital certificate, often used when setting up SSL/TLS certificates.
+-new: Indicates that a new CSR will be created.
+-key server.key: Specifies the private key (server.key) that will be used to sign the CSR. This is the unencrypted private key.
+-out server.csr: Specifies the output file where the CSR will be saved (server.csr).
+In short, this command creates a new CSR using the server.key file and saves the CSR to server.csr. The CSR is typically used to request an SSL certificate from a Certificate Authority (CA).
+
+5. openssl x509 -req -sha256 -days 365 -in server.csr -signkey server.key -out server.crt
+openssl x509: This command is used to manage and generate X.509 certificates, which are widely used for SSL/TLS certificates.
+-req: Specifies that the input will be a certificate signing request (CSR).
+-sha256: Specifies the hashing algorithm used to sign the certificate (SHA-256, which is a secure and common algorithm).
+-days 365: Sets the validity of the certificate to 365 days (1 year).
+-in server.csr: Specifies the CSR file (server.csr) as the input, which contains the information needed for the certificate.
+-signkey server.key: Uses the private key (server.key) to sign the certificate.
+-out server.crt: Specifies the output file for the signed certificate (server.crt).
+In summary, this command generates a self-signed X.509 certificate (server.crt) from the CSR file (server.csr), using the server.key private key to sign it. The certificate will be valid for 365 days.
+
+6. base64 -i server.key #to get jwt code
+base64: This is a command to encode or decode data using Base64 encoding, which is a binary-to-text encoding scheme.
+-i server.key: Specifies the input file (server.key), which is the unencrypted RSA private key.
+# to get jwt code: This comment (the # denotes a comment in many shells) suggests that the purpose of encoding the server.key is to get the JWT (JSON Web Token) code. In this case, the private key is being Base64 encoded, which is typically required when using the key for JWT purposes.
+
+
+Step 3:-
+Configure 3 things in bitbucket variables - 
+UserName (SIT2_USERNAME)
+Consumer Key of Connected App (SIT2_CONSUMER_KEY)
+SIT JWT KEY i.e. from the 6th point.
+Sandbox URL - test.salesforce.com (SANDBOX_URL)
+
+Then in script use following command
+
+rm -r keys && mkdir keys
+(umask 077 ; echo $SIT2_JWT_KEY | base64 -d > keys/server.key)
+sfdx force:auth:jwt:grant --clientid $SIT2_CONSUMER_KEY --jwtkeyfile keys/server.key --username $SIT2_USERNAME --instanceurl $SANDBOX_URL --setalias sit
+
+Comments
+cat keys/server.key
+echo "Test2"
+echo "SIT2_CONSUMER_KEY value:"
+echo "$SIT2_CONSUMER_KEY"
+echo "SIT2_USERNAME value:"
+echo "$SIT2_USERNAME"
+
+Sample Command
+sfdx force:auth:jwt:grant --clientid 3vdn.Ncdf.xKjaZ.WEtfoah.P42asdasdasdasd817238 --jwtkeyfile server.key --username abhijit.debadutta@testorg.com --instanceurl https://test.salesforce.com
+
+server.key = the o/p of point 2 in Step 2
