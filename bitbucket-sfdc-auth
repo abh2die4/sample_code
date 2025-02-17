@@ -58,11 +58,13 @@ openssl x509: This command is used to manage and generate X.509 certificates, wh
 -signkey server.key: Uses the private key (server.key) to sign the certificate.
 -out server.crt: Specifies the output file for the signed certificate (server.crt).
 In summary, this command generates a self-signed X.509 certificate (server.crt) from the CSR file (server.csr), using the server.key private key to sign it. The certificate will be valid for 365 days.
+THIS HAS TO BE UPLOADED TO THE 'Digital Certificate' of the connected app in point 1
 
 6. base64 -i server.key #to get jwt code
 base64: This is a command to encode or decode data using Base64 encoding, which is a binary-to-text encoding scheme.
 -i server.key: Specifies the input file (server.key), which is the unencrypted RSA private key.
-# to get jwt code: This comment (the # denotes a comment in many shells) suggests that the purpose of encoding the server.key is to get the JWT (JSON Web Token) code. In this case, the private key is being Base64 encoded, which is typically required when using the key for JWT purposes.
+# to get jwt code: This comment (the # denotes a comment in many shells) suggests that the purpose of encoding the server.key is to get the JWT (JSON Web Token) code. In this case, the private key is being Base64 encoded, 
+which is typically required when using the key for JWT purposes.
 
 
 Step 3:-
